@@ -6,8 +6,8 @@
 
 module Pos.Wallet.Web.Tracking.BListener
        ( MonadBListener(..)
-       , onApplyTracking
-       , onRollbackTracking
+       , onApplyBlocksWebWallet
+       , onRollbackBlocksWebWallet
        ) where
 
 import           Universum
@@ -63,7 +63,7 @@ walletGuard curTip wAddr action = WS.getWalletSyncTip wAddr >>= \case
         | otherwise -> action
 
 -- Perform this action under block lock.
-onApplyTracking
+onApplyBlocksWebWallet
     :: forall ssc ctx m .
     ( SscHelpersClass ssc
     , AccountMode ctx m
@@ -73,7 +73,7 @@ onApplyTracking
     , HasConfiguration
     )
     => OldestFirst NE (Blund ssc) -> m SomeBatchOp
-onApplyTracking blunds = setLogger $ do
+onApplyBlocksWebWallet blunds = setLogger $ do
     let oldestFirst = getOldestFirst blunds
         txsWUndo = concatMap gbTxsWUndo oldestFirst
         newTipH = NE.last oldestFirst ^. _1 . blockHeader
@@ -105,7 +105,7 @@ onApplyTracking blunds = setLogger $ do
     ptxBlkInfo = either (const Nothing) (Just . view difficultyL)
 
 -- Perform this action under block lock.
-onRollbackTracking
+onRollbackBlocksWebWallet
     :: forall ssc ctx m .
     ( AccountMode ctx m
     , MonadDBRead m
@@ -115,7 +115,7 @@ onRollbackTracking
     , HasConfiguration
     )
     => NewestFirst NE (Blund ssc) -> m SomeBatchOp
-onRollbackTracking blunds = setLogger $ do
+onRollbackBlocksWebWallet blunds = setLogger $ do
     let newestFirst = getNewestFirst blunds
         txs = concatMap (reverse . gbTxsWUndo) newestFirst
         newTip = (NE.last newestFirst) ^. prevBlockL

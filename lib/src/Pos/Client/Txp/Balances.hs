@@ -21,7 +21,7 @@ import           Pos.Core             (Address (..), Coin, HasConfiguration,
                                        IsBootstrapEraAddr (..), isRedeemAddress,
                                        makePubKeyAddress)
 import           Pos.Crypto           (PublicKey)
-import           Pos.DB               (MonadDBRead, MonadGState, MonadRealDB)
+import           Pos.DB               (MonadDBRead, MonadGState)
 import           Pos.Txp              (MonadTxpMem, Utxo, addrBelongsToSet,
                                        filterUtxoByAddrs, genesisUtxo, getUtxoModifier,
                                        unGenesisUtxo)
@@ -49,8 +49,7 @@ getBalanceFromUtxo :: MonadBalances m => Address -> m Coin
 getBalanceFromUtxo addr = getTotalCoinsInUtxo <$> getOwnUtxo addr
 
 type BalancesEnv ext ctx m =
-    ( MonadRealDB ctx m
-    , MonadDBRead m
+    ( MonadDBRead m
     , MonadGState m
     , WebWalletModeDB ctx m
     , MonadMask m
