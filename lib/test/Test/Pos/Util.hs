@@ -50,6 +50,7 @@ module Test.Pos.Util
        , qcElem
        , qcNotElem
        , qcFail
+       , blockPropertySpec
        ) where
 
 import           Universum
@@ -90,6 +91,7 @@ import           Pos.Update.Configuration         (HasUpdateConfiguration,
 
 import           Pos.Launcher.Configuration       (Configuration (..), HasConfigurations)
 
+import           Test.Pos.Block.Logic.Mode        (BlockProperty, blockPropertyTestable)
 import           Test.Pos.Configuration           (defaultTestConf)
 
 -- | This constraint requires all configurations which are not
@@ -410,3 +412,11 @@ qcNotElem x xs =
 -- | A property that is always false
 qcFail :: Text -> Property
 qcFail s = counterexample (toString s) False
+
+-- | Specialized version of 'prop' function from 'hspec'.
+blockPropertySpec ::
+       (HasNodeConfiguration, HasGtConfiguration)
+    => String
+    -> (HasConfiguration => BlockProperty a)
+    -> Spec
+blockPropertySpec description bp = prop description (blockPropertyTestable bp)
