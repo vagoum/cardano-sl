@@ -33,6 +33,7 @@ import           Pos.Util.UserSecret        (readUserSecret, usKeys, usWallet, u
 import           Pos.Wallet                 (addSecretKey, getBalance, getSecretKeysPlain)
 import           Pos.Wallet.Web.Secret      (WalletUserSecret (..))
 
+import           BlockGen                   (generateBlocks)
 import qualified Command.Rollback           as Rollback
 import qualified Command.Tx                 as Tx
 import           Command.Types              (Command (..))
@@ -79,7 +80,7 @@ Avaliable commands:
 
    rollback <N> <file>            -- Rollback <N> blocks (genesis or main doesn't matter) and dump transactions from
                                   -- them to <file> in binary format.
-
+   generate-blocks <N> <seed>?    -- Generate blocks. Parameters are number of blocks and seed.
    send-from-file <file>          -- Read transactions in binary format from <file> and submit them to the network.
                                   -- <file> should be in format produced by 'rollback' command.
 
@@ -177,6 +178,8 @@ runCmd _ (AddrDistr pk asd) = do
     addr = makeAddress (PubKeyASD pk) (AddrAttributes Nothing asd)
 runCmd _ (Rollback rollbackNum rollbackDumpPath) =
     Rollback.rollbackAndDump rollbackNum rollbackDumpPath
+runCmd _ (GenBlocks params) =
+    generateBlocks params
 runCmd sendActions (SendTxsFromFile filePath) =
     Tx.sendTxsFromFile sendActions filePath
 runCmd _ Quit = pure ()

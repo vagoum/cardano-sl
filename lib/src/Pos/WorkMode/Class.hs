@@ -34,7 +34,7 @@ import           Pos.Delegation.Class        (MonadDelegation)
 import           Pos.DHT.Real.Types          (KademliaDHTInstance)
 import           Pos.Infra.Configuration     (HasInfraConfiguration)
 import           Pos.KnownPeers              (MonadFormatPeers, MonadKnownPeers)
-import           Pos.Lrc.Context             (LrcContext)
+import           Pos.Lrc.Context             (HasLrcContext)
 import           Pos.Network.Types           (HasNodeType, NetworkConfig)
 import           Pos.Recovery.Info           (MonadRecoveryInfo)
 import           Pos.Reporting               (HasReportingContext)
@@ -51,9 +51,9 @@ import           Pos.Txp.MemState            (MempoolExt, MonadTxpLocal, MonadTx
 import           Pos.Update.Configuration    (HasUpdateConfiguration)
 import           Pos.Update.Context          (UpdateContext)
 import           Pos.Update.Params           (UpdateParams)
+import           Pos.Util                    (HasLens, HasLens')
 import           Pos.Util.CompileInfo        (HasCompileInfo)
 import           Pos.Util.TimeWarp           (CanJsonLog)
-import           Pos.Util.Util               (HasLens, HasLens')
 
 -- | Bunch of constraints to perform work for real world distributed system.
 type WorkMode ssc ctx m
@@ -86,13 +86,13 @@ type WorkMode ssc ctx m
       , HasLens' ctx StartTime
       , HasLens' ctx StateLock
       , HasLens' ctx StateLockMetrics
-      , HasLens LrcContext ctx LrcContext
-      , HasLens UpdateContext ctx UpdateContext
-      , HasLens UpdateParams ctx UpdateParams
-      , HasLens SecurityParams ctx SecurityParams
-      , HasLens TxpGlobalSettings ctx TxpGlobalSettings
-      , HasLens BlockRetrievalQueueTag ctx (BlockRetrievalQueue ssc)
+      , HasLens' ctx UpdateContext
+      , HasLens' ctx UpdateParams
+      , HasLens' ctx SecurityParams
+      , HasLens' ctx TxpGlobalSettings
       , HasLens' ctx (NetworkConfig KademliaDHTInstance)
+      , HasLens BlockRetrievalQueueTag ctx (BlockRetrievalQueue ssc)
+      , HasLrcContext ctx
       , HasSscContext ssc ctx
       , HasReportingContext ctx
       , HasPrimaryKey ctx
