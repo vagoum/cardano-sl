@@ -14,13 +14,15 @@ module Pos.Wallet.Web.Mode
 
 import           Universum
 
-import           Control.Lens                     (makeLensesWith)
+import qualified Control.Concurrent.STM           as STM
+import           Control.Lens                     (makeLensesWith, (<%=))
 import           Control.Monad.Catch              (MonadMask)
 import qualified Control.Monad.Reader             as Mtl
 import           Control.Monad.Trans.Control      (MonadBaseControl)
 import           Crypto.Random                    (MonadRandom)
 import           Ether.Internal                   (HasLens (..))
 import           Mockable                         (Production)
+import           Serokell.Util                    (modifyTVarS)
 import           System.Wlog                      (HasLoggerName (..))
 
 import           Pos.Block.Core                   (Block, BlockHeader)
@@ -79,11 +81,12 @@ import           Pos.Util.LoggerName              (HasLoggerName' (..),
                                                    modifyLoggerNameDefault)
 import qualified Pos.Util.OutboundQueue           as OQ.Reader
 import           Pos.Util.TimeWarp                (CanJsonLog (..))
-import           Pos.Util.UserSecret              (HasUserSecret (..))
+import           Pos.Util.UserSecret              (HasUserSecret (..), writeUserSecret)
 import           Pos.Util.Util                    (HasLens', postfixLFields)
 import           Pos.WorkMode                     (EmptyMempoolExt, MinWorkMode,
                                                    RealModeContext (..))
 
+import           Pos.Wallet.KeyStorage            (MonadKeys (..))
 import           Pos.Wallet.Redirect              (MonadBlockchainInfo (..),
                                                    MonadUpdates (..),
                                                    applyLastUpdateWebWallet,
@@ -282,3 +285,10 @@ type instance MempoolExt WalletWebMode = EmptyMempoolExt
 instance (HasConfiguration, HasInfraConfiguration) => MonadTxpLocal WalletWebMode where
     txpNormalize = txNormalize
     txpProcessTx = txProcessTransaction
+
+instance MonadKeys WalletWebMode where
+    getSecret = view userSecret >>= atomically . STM.readTVar
+    modifySecret f = do
+        us <- view userSecret
+        new <- atomically $ modifyTVarS us (identity <%= f)
+        writeUserSecret new

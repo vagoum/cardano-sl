@@ -24,7 +24,7 @@ import           Pos.Core                   (SoftwareVersion (..), decodeTextAdd
 import           Pos.Update.Configuration   (curSoftwareVersion)
 import           Pos.Util                   (maybeThrow)
 
-import           Pos.Wallet.KeyStorage      (deleteSecretKey, getSecretKeys)
+import           Pos.Wallet.KeyStorage      (MonadKeys, deleteSecretKey, getSecretKeys)
 import           Pos.Wallet.WalletMode      (applyLastUpdate, connectedPeers,
                                              localChainDifficulty, networkChainDifficulty)
 import           Pos.Wallet.Web.ClientTypes (CProfile (..), CUpdateInfo (..),
@@ -97,6 +97,7 @@ syncProgress =
 testResetAll :: MonadWalletWebMode ctx m => m ()
 testResetAll = deleteAllKeys >> testReset
   where
+    deleteAllKeys :: MonadKeys m => m ()
     deleteAllKeys = do
         keyNum <- length <$> getSecretKeys
         replicateM_ keyNum $ deleteSecretKey 0
