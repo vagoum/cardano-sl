@@ -12,7 +12,8 @@ import qualified Pos.Block.Core      as BT
 import           Pos.Ssc.GodTossing  (SscGodTossing)
 import           Pos.Ssc.NistBeacon  (SscNistBeacon)
 
-import           Test.Pos.Util       (safeCopyTest, withDefConfiguration)
+import           Test.Pos.Helpers    (safeCopyTest)
+import           Test.Pos.Util       (withDefConfiguration)
 
 spec :: Spec
 spec = withDefConfiguration $ describe "Block types" $ do
