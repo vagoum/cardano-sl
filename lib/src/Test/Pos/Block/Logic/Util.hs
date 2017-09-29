@@ -32,8 +32,7 @@ import           Pos.Ssc.GodTossing          (SscGodTossing)
 import           Pos.Util.Chrono             (NE, OldestFirst (..))
 import           Pos.Util.Util               (_neLast)
 
-import           Test.Pos.Block.Logic.Mode   (BlockProperty, BlockTestContext,
-                                              btcSlotId_L)
+import           Test.Pos.Block.Logic.Mode   (BlockProperty, BlockTestContext, btcSlotIdL)
 
 -- | Wrapper for 'bpGenBlocks' to clarify the meaning of the argument.
 newtype EnableTxPayload = EnableTxPayload Bool
@@ -86,7 +85,7 @@ bpGoToArbitraryState = pass
 
 -- | Perform action pretending current slot is the given one.
 withCurrentSlot :: MonadReader BlockTestContext m => SlotId -> m a -> m a
-withCurrentSlot slot = local (set btcSlotId_L $ Just slot)
+withCurrentSlot slot = local (set btcSlotIdL $ Just slot)
 
 -- | This simple helper is useful when one needs to verify
 -- blocks. Blocks verification checks that blocks are not from
