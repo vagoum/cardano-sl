@@ -44,6 +44,8 @@ import           Pos.Core                         (Address, HasConfiguration,
                                                    HasPrimaryKey (..),
                                                    IsBootstrapEraAddr (..), IsHeader,
                                                    deriveFirstHDAddress,
+                                                   largestPubKeyAddressBoot,
+                                                   largestPubKeyAddressSingleKey,
                                                    makePubKeyAddress, siEpoch)
 import           Pos.Crypto                       (EncryptedSecretKey, PublicKey,
                                                    emptyPassphrase)
@@ -222,9 +224,15 @@ instance MonadKnownPeers AuxxMode where
 instance MonadFormatPeers AuxxMode where
     formatKnownPeers = OQ.Reader.formatKnownPeersReader (rmcOutboundQ . acRealModeContext)
 
-instance (HasConfiguration, HasInfraConfiguration) => MonadAddresses AuxxMode where
+instance (HasConfiguration, HasInfraConfiguration) =>
+         MonadAddresses AuxxMode where
     type AddrData AuxxMode = PublicKey
     getNewAddress = makePubKeyAddressAuxx
+    getFakeChangeAddress = do
+        epochIndex <- siEpoch <$> getCurrentSlotInaccurate
+        gsIsBootstrapEra epochIndex <&> \case
+            False -> largestPubKeyAddressBoot
+            True -> largestPubKeyAddressSingleKey
 
 type instance MempoolExt AuxxMode = EmptyMempoolExt
 

@@ -89,6 +89,7 @@ library
                       , formatting
                       , lens
                       , log-warper
+                      , memory
                       , mtl
                       , network-transport
                       , node-sketch
