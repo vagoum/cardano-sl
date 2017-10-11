@@ -7,6 +7,9 @@ module Pos.Wallet.Web.Methods.Restore
        , importWallet
        , restoreWallet
        , addInitialRichAccount
+
+       -- For testing
+       , importWalletDo
        ) where
 
 import           Universum
@@ -40,8 +43,8 @@ import           Pos.Wallet.Web.Mode          (MonadWalletWebMode)
 import           Pos.Wallet.Web.Secret        (WalletUserSecret (..),
                                                mkGenesisWalletUserSecret, wusAccounts,
                                                wusWalletName)
-import           Pos.Wallet.Web.State         (createAccount, setWalletSyncTip,
-                                               removeHistoryCache)
+import           Pos.Wallet.Web.State         (createAccount, removeHistoryCache,
+                                               setWalletSyncTip)
 import           Pos.Wallet.Web.Tracking      (syncWalletOnImport)
 
 
@@ -98,13 +101,22 @@ importWallet passphrase (toString -> fp) = do
         rewrapToWalletError (\UserSecretDecodingError{} -> True) decodeFailed $
         readUserSecret fp
     wSecret <- maybeThrow noWalletSecret (secret ^. usWallet)
-    wId <- cwId <$> importWalletSecret emptyPassphrase wSecret
-    L.changeWalletPassphrase wId emptyPassphrase passphrase
-    L.getWallet wId
+    importWalletDo passphrase wSecret
   where
     noWalletSecret = RequestError "This key doesn't contain HD wallet info"
     noFile _ = RequestError "File doesn't exist"
     decodeFailed = RequestError . sformat ("Invalid secret file ("%build%")")
+
+-- Do the all concrete logic of importing here.
+importWalletDo
+    :: MonadWalletWebMode ctx m
+    => PassPhrase
+    -> WalletUserSecret
+    -> m CWallet
+importWalletDo passphrase wSecret = do
+    wId <- cwId <$> importWalletSecret emptyPassphrase wSecret
+    L.changeWalletPassphrase wId emptyPassphrase passphrase
+    L.getWallet wId
 
 importWalletSecret
     :: MonadWalletWebMode ctx m
