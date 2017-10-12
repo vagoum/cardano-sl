@@ -35,6 +35,7 @@ import           Pos.Client.Txp.Balances          (MonadBalances (..), getBalanc
 import           Pos.Client.Txp.History           (MonadTxHistory (..),
                                                    getBlockHistoryDefault,
                                                    getLocalHistoryDefault, saveTxDefault)
+import           Pos.Communication                (SendActions (..), submitTxRaw)
 import           Pos.Context                      (HasNodeContext (..))
 import           Pos.Core                         (HasConfiguration, HasPrimaryKey (..),
                                                    IsHeader)
@@ -56,6 +57,7 @@ import           Pos.DB.Rocks                     (dbDeleteDefault, dbGetDefault
 import           Pos.Infra.Configuration          (HasInfraConfiguration)
 import           Pos.KnownPeers                   (MonadFormatPeers (..),
                                                    MonadKnownPeers (..))
+import           Pos.Launcher                     (HasConfigurations)
 import           Pos.Network.Types                (HasNodeType (..))
 import           Pos.Recovery                     ()
 import           Pos.Recovery.Info                (MonadRecoveryInfo)
@@ -75,6 +77,7 @@ import           Pos.Txp                          (MempoolExt, MonadTxpLocal (..
                                                    MonadTxpMem, txNormalize,
                                                    txProcessTransaction)
 import           Pos.Util                         (Some (..))
+import           Pos.Util.CompileInfo             (HasCompileInfo)
 import           Pos.Util.JsonLog                 (HasJsonLogConfig (..), jsonLogDefault)
 import           Pos.Util.LoggerName              (HasLoggerName' (..),
                                                    getLoggerNameDefault,
@@ -83,6 +86,7 @@ import qualified Pos.Util.OutboundQueue           as OQ.Reader
 import           Pos.Util.TimeWarp                (CanJsonLog (..))
 import           Pos.Util.UserSecret              (HasUserSecret (..), writeUserSecret)
 import           Pos.Util.Util                    (HasLens', postfixLFields)
+import           Pos.Wallet.Web.Networking        (MonadWalletSendActions (..))
 import           Pos.WorkMode                     (EmptyMempoolExt, MinWorkMode,
                                                    RealModeContext (..))
 
@@ -107,8 +111,12 @@ import           Pos.Wallet.Web.Tracking          (MonadBListener (..),
 data WalletWebModeContext = WalletWebModeContext
     { wwmcWalletState     :: !WalletState
     , wwmcConnectionsVar  :: !ConnectionsVar
+    , wwmcSendActions     :: !(STM.TMVar (SendActions WalletWebMode))
     , wwmcRealModeContext :: !(RealModeContext WalletSscType EmptyMempoolExt)
     }
+
+-- It's here because of TH for lens
+type WalletWebMode = Mtl.ReaderT WalletWebModeContext Production
 
 makeLensesWith postfixLFields ''WalletWebModeContext
 
@@ -166,7 +174,9 @@ data WalletWebModeContextTag
 instance HasLens WalletWebModeContextTag WalletWebModeContext WalletWebModeContext where
     lensOf = identity
 
-type WalletWebMode = Mtl.ReaderT WalletWebModeContext Production
+----------------------------------------------------------------------------
+-- Wallet modes
+----------------------------------------------------------------------------
 
 type MonadWalletWebMode' ssc ctx m =
     ( MinWorkMode m
@@ -205,7 +215,12 @@ type MonadWebSockets ctx =
 type MonadFullWalletWebMode ctx m =
     ( MonadWalletWebMode ctx m
     , MonadWebSockets ctx
+    , MonadWalletSendActions m
     )
+
+----------------------------------------------------------------------------
+-- Instances for WalletWebMode
+----------------------------------------------------------------------------
 
 instance (HasConfiguration, HasInfraConfiguration, MonadSlotsData ctx WalletWebMode)
       => MonadSlots ctx WalletWebMode
@@ -294,3 +309,10 @@ instance MonadKeys WalletWebMode where
         us <- view userSecret
         new <- atomically $ modifyTVarS us (identity <%= f)
         writeUserSecret new
+
+instance (HasConfigurations, HasCompileInfo) => MonadWalletSendActions WalletWebMode where
+    sendTxToNetwork tx = do
+        saVar <- view wwmcSendActions_L
+        saMB <- atomically $ STM.tryReadTMVar saVar
+        let sa = fromMaybe (error "Wallet's SendActions isn't initialized") saMB
+        submitTxRaw (enqueueMsg sa) tx
