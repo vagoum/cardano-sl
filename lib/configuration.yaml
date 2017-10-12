@@ -236,6 +236,7 @@ mainnet_base: &mainnet_base
           vssMaxTTL: 6
         ftsSeed: "dmFzYSBvcGFzYSBza292b3JvZGEgR2d1cmRhIGJvcm9kYSBwcm92b2Rh"
         heavyDelegation: {}
+        # It's defined below and set for each config.
         avvmDistr: {}
 
     dbSerializeVersion: 0
@@ -14913,14 +14914,9 @@ devnet: &devnet
     mdNoBlocksSlotThreshold: 5 # should be less than 2 * k
     recoveryHeadersMessage: 200 # should be greater than k
 
-# TODO (@gromak): these testnet configs look wrong.
-# Why are we using 'TestnetRichmenStakeDistr' in testnet, it should be
-# 'TestnetCustomStakeDistr'.
-# Should be investigated!
-
 ##############################################################################
 ##                                                                          ##
-##   Testnet configs (full)                                                 ##
+##   Testnet configs (full nodes)                                           ##
 ##                                                                          ##
 ##############################################################################
 
@@ -14932,25 +14928,56 @@ testnet_public_full: &testnet_public_full
       <<: *mainnet_base_genesis
       spec:  &testnet_public_full_spec
         <<: *mainnet_base_spec
-        protocolConstants:
+        protocolConstants: &testnet_public_full_protocolConstants
           <<: *mainnet_base_protocolConstants
-          protocolMagic: 60987900 #testnet protocolMagic
+          protocolMagic: 60987900 # testnet protocolMagic
         avvmDistr: *mainnet_avvmDistr
         initializer:
-          testnetInitializer:
+          testnetInitializer: &testnet_public_full_testnetInitializer
             testBalance:
-              poors:        24000
-              richmen:      7
-              richmenShare: 0.94
+              # TODO: we need more poors, but performance doesn't let us do it.
+              poors:        200
+              # we don't need richmen, we provide explicit bootstrap stakeholders
+              richmen:      0
+              richmenShare: 0
               totalBalance: 13887504355000000
-              useHDAddresses: False
+              useHDAddresses: True
             fakeAvvmBalance:
               count: 100
               oneBalance: 15000000
             distribution:
-              testnetRichmenStakeDistr: []
+              testnetCustomStakeDistr:
+                bootStakeholders: &testnet_public_full_bootStakeholders
+                  75fc2050ea497eb615461d01170679d143fb70c07c0baf3db54c6237: 1
+                  eaba957b871c4d5d9f5eab1a4183a037b3b0a59e31a52185d37627f1: 1
+                  4ef570f02d8e144724c7ce935415aa02d3bb4fe8c634757d1485cd82: 1
+                  7614c305c19d54fbbb57f6671b5181bc5bc54f7bbb4591ff3a793021: 1
+                vssCerts:
+                  75fc2050ea497eb615461d01170679d143fb70c07c0baf3db54c6237:
+                    expiryEpoch: 5
+                    signature: "b735325b8f21a033cbe3005c35e4397dd33168c62c05cc8f59e66efbcdeb36b5862d7a324def1ba10e4a79cf0e56c75568c84e6ca28b1a9bb5da65fc6a8cb002"
+                    signingKey: "4vHA0HXrmpD6VhhCe44CAJ8IHr9BKpCUtOmGRZu/39vRLJ1z2vJp8h+rdOqb7tJg7Uzf94x0NlM8xHgmhPBecg=="
+                    vssKey: "WCECml0Nc9bjjerxHGf2sDfKJIILyDKvjM8zCdfzBmYxcyU="
+                  eaba957b871c4d5d9f5eab1a4183a037b3b0a59e31a52185d37627f1:
+                    expiryEpoch: 5
+                    signature: "00c7545070d92ee685fabae89a726d6c1ea329b0a97ee241176bd8e6b0fd7355420980bf78d41d672b0b7006cc43d4b7537f1cce757b80b1b40e764dc2584500"
+                    signingKey: "FXU35aHyAKouHgj+qWi/vfC8CzU4JI9+zxDkQwq+B4sFIsaai3+U307SFLp2zxZB7Jm9kjc19TcBtTefkHxxmg=="
+                    vssKey: "WCEDNB6FR+wZABJptA2JiReaIHLBRVz04Ys3P6UMDuSW8Qg="
+                  4ef570f02d8e144724c7ce935415aa02d3bb4fe8c634757d1485cd82:
+                    expiryEpoch: 5
+                    signature: "9405196fdc4ae37810295863b2ce3ef32ecdc3fe06a29d2bd19f5882fb3ce4b45afe957e0379d3e984aa983a1b76cb0b1c36ab0f818558463fa70e48c2631e03"
+                    signingKey: "56nOXY5pjR5pN3NzIYnKETnU0TMgFnbnVLMT0IjPVk7OTyZr5VCHAE9B5A9nXuMxY50I55o+A3V8ElKkVr3K3Q=="
+                    vssKey: "WCEDHqWzPg5UEWvT97zj/Wyi5czfHtrmyiDxPKNdAgtR4Zo="
+                  7614c305c19d54fbbb57f6671b5181bc5bc54f7bbb4591ff3a793021:
+                    expiryEpoch: 5
+                    signature: "481569ecfae6caea255f34f4442546b80736e6660f668256d3adcc8b304a2fa413814569565452cf285918ef5e5f2c16ece0befa59e015186b2f53ec4dbdd607"
+                    signingKey: "8K2xG+Ki0Ckin+ULS/S6V+gbLGk6QPV8lyGmA/cuV7+z+a0ulN8BpEERFOoHWnULFbW8AdtowS+T6iYNBxH+fg=="
+                    vssKey: "WCED+YPC8drnFjz7BWkzu167GB2gvq3ji7Y1tJvXmhy0t9k="
             seed: 0
 
+# Similar to public, but has smaller `k` and different magic.
+# Some constants dependent on `k` are adjusted accordingly.
+# VSS certificates differ due to different magic.
 testnet_staging_full: &testnet_staging_full
   <<: *testnet_public_full
   core:
@@ -14960,9 +14987,41 @@ testnet_staging_full: &testnet_staging_full
       spec:
         <<: *testnet_public_full_spec
         protocolConstants:
-          <<: *mainnet_base_protocolConstants
-          protocolMagic: 60987900 #testnet protocolMagic
+          <<: *testnet_public_full_protocolConstants
+          protocolMagic: 60987901 # testnet staging protocolMagic
           k: 108
+        initializer:
+          testnetInitializer:
+            <<: *testnet_public_full_testnetInitializer
+            distribution:
+              testnetCustomStakeDistr:
+                bootStakeholders: *testnet_public_full_bootStakeholders
+                vssCerts:
+                  75fc2050ea497eb615461d01170679d143fb70c07c0baf3db54c6237:
+                    expiryEpoch: 5
+                    signature: "aaa622559d142e4c20b85e8331fb6167e86ef1a07367b66c6e69dc187dbc0606b9e787eac2fb61927964f711e2e1a0a0d87faa60498779933eb3f25d1bb3f602"
+                    signingKey: "4vHA0HXrmpD6VhhCe44CAJ8IHr9BKpCUtOmGRZu/39vRLJ1z2vJp8h+rdOqb7tJg7Uzf94x0NlM8xHgmhPBecg=="
+                    vssKey: "WCECml0Nc9bjjerxHGf2sDfKJIILyDKvjM8zCdfzBmYxcyU="
+                  eaba957b871c4d5d9f5eab1a4183a037b3b0a59e31a52185d37627f1:
+                    expiryEpoch: 5
+                    signature: "04039835a78ddd6e943f56ae364558d05de54cb5200e574188ddd9d6ef6bd25eaf5c8a5cae16634501a52ca82c342ef05c1f48e240aa8cf6dcc3ff545176d409"
+                    signingKey: "FXU35aHyAKouHgj+qWi/vfC8CzU4JI9+zxDkQwq+B4sFIsaai3+U307SFLp2zxZB7Jm9kjc19TcBtTefkHxxmg=="
+                    vssKey: "WCEDNB6FR+wZABJptA2JiReaIHLBRVz04Ys3P6UMDuSW8Qg="
+                  4ef570f02d8e144724c7ce935415aa02d3bb4fe8c634757d1485cd82:
+                    expiryEpoch: 5
+                    signature: "894271adb89d75c9f52266887dee8d99b0051ffd6362ac28d9ea8c37b2d2a3bb71f3bc1815db88398e32014605638af27d7e3a8cd725b4363f06e3d2e55c9a09"
+                    signingKey: "56nOXY5pjR5pN3NzIYnKETnU0TMgFnbnVLMT0IjPVk7OTyZr5VCHAE9B5A9nXuMxY50I55o+A3V8ElKkVr3K3Q=="
+                    vssKey: "WCEDHqWzPg5UEWvT97zj/Wyi5czfHtrmyiDxPKNdAgtR4Zo="
+                  7614c305c19d54fbbb57f6671b5181bc5bc54f7bbb4591ff3a793021:
+                    expiryEpoch: 5
+                    signature: "9f6970b1cec788da5f98e7d52fd06b022429114ef166f983d0527d45ff4d2d1ea3f647d44cc986042494f514709ab58e6b249072e96868a4c354cdd591ae680b"
+                    signingKey: "8K2xG+Ki0Ckin+ULS/S6V+gbLGk6QPV8lyGmA/cuV7+z+a0ulN8BpEERFOoHWnULFbW8AdtowS+T6iYNBxH+fg=="
+                    vssKey: "WCED+YPC8drnFjz7BWkzu167GB2gvq3ji7Y1tJvXmhy0t9k="
+
+  node:
+    <<: *mainnet_base_node
+    mdNoBlocksSlotThreshold: 10 # should be less than 2 * k
+    recoveryHeadersMessage: 250 # should be greater than k
 
 ##############################################################################
 ##                                                                          ##
