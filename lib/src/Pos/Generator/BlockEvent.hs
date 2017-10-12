@@ -190,7 +190,10 @@ genBlocksInTree secrets bootStakeholders blockchainTree = do
             }
     -- Partial pattern-matching is safe because we specify
     -- blockCount = 1 in the generation parameters.
-    OldestFirst [block] <- genBlocks blockGenParams
+    -- FIXME avieth what if it's 'Nothing'? Then the list is empty.
+    let inj Nothing   = []
+        inj (Just it) = [it]
+    [block] <- genBlocks blockGenParams inj
     forestBlocks <- genBlocksInForest secrets bootStakeholders blockchainForest
     return $ BlockchainTree block forestBlocks
 

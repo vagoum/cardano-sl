@@ -40,8 +40,6 @@ import           Pos.Lrc.Context             (lrcActionOnEpochReason)
 import qualified Pos.Lrc.DB                  as LrcDB
 import           Pos.Ssc.GodTossing          (SscGodTossing)
 import           Pos.Txp                     (MempoolExt, MonadTxpLocal)
-import           Pos.Util.Chrono             (OldestFirst (..))
-import           Pos.Util.CompileInfo        (HasCompileInfo, withCompileInfo)
 import           Pos.Util.Util               (maybeThrow, _neHead)
 
 ----------------------------------------------------------------------------
@@ -58,22 +56,32 @@ type BlockTxpGenMode g ctx m =
 -- | Generate an arbitrary sequence of valid blocks. The blocks are
 -- valid with respect to the global state right before this function
 -- call.
+-- The blocks themselves can be combined and retained according to some monoid.
+-- Intermediate results will be forced. Blocks can be generated, written to
+-- disk, then collected by using '()' as the monoid and 'const ()' as the
+-- injector, for example.
 genBlocks ::
-       forall g ctx m . BlockTxpGenMode g ctx m
+       forall g ctx m t . (BlockTxpGenMode g ctx m, Monoid t)
     => BlockGenParams
-    -> RandT g m (OldestFirst [] (Blund SscGodTossing))
-genBlocks params = do
+    -> (Maybe (Blund SscGodTossing) -> t)
+    -> RandT g m t
+genBlocks params inj = do
     ctx <- lift $ mkBlockGenContext @(MempoolExt m) params
     mapRandT (`runReaderT` ctx) genBlocksDo
   where
-    genBlocksDo =
-        OldestFirst <$> do
-            let numberOfBlocks = params ^. bgpBlockCount
-            tipEOS <- getEpochOrSlot <$> lift (getTipHeader @SscGodTossing)
-            let startEOS = succ tipEOS
-            let finishEOS =
-                    toEnum $ fromEnum tipEOS + fromIntegral numberOfBlocks
-            catMaybes <$> mapM genBlock [startEOS .. finishEOS]
+    genBlocksDo = do
+        let numberOfBlocks = params ^. bgpBlockCount
+        tipEOS <- getEpochOrSlot <$> lift (getTipHeader @SscGodTossing)
+        let startEOS = succ tipEOS
+        let finishEOS = toEnum $ fromEnum tipEOS + fromIntegral numberOfBlocks
+        foldM' genOneBlock mempty [startEOS .. finishEOS]
+
+    genOneBlock t eos = ((t <>) . inj) <$> genBlock eos
+
+    foldM' _ !base [] = return base
+    foldM' combine !base (x : xs) = do
+      it <- combine base x
+      foldM' combine it xs
 
 -- Generate a valid 'Block' for the given epoch or slot (genesis block
 -- in the former case and main block the latter case) and apply it.

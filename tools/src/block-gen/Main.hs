@@ -56,7 +56,7 @@ main = getBlockGenOptions >>= \(BlockGenOptions {..}) ->
     liftIO $ bracket (openNodeDBs (not bgoAppend) bgoPath) closeNodeDBs $ \db ->
         runProduction $
         initTBlockGenMode db $
-        void $ evalRandT (genBlocks bgenParams) (mkStdGen seed)
+        evalRandT (genBlocks bgenParams (const ())) (mkStdGen seed)
     -- We print it twice because there can be a ton of logs and
     -- you don't notice the first message.
     putText $ "Generated with seed " <> show seed
