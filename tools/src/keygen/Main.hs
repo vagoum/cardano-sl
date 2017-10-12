@@ -9,7 +9,7 @@ import           Crypto.Random          (MonadRandom)
 import           Data.ByteString.Base58 (bitcoinAlphabet, encodeBase58)
 import qualified Data.List              as L
 import qualified Data.Text              as T
-import           Formatting             (build, sformat, stext, (%))
+import           Formatting             (build, sformat, stext, (%), string)
 import           System.Directory       (createDirectoryIfMissing)
 import           System.FilePath        ((</>))
 import           System.FilePath.Glob   (glob)
@@ -25,7 +25,7 @@ import           Pos.Core               (CoreConfiguration (..),
                                          coreConfiguration, generateFakeAvvm,
                                          generateSecrets, generatedSecrets, gsInitializer,
                                          mkVssCertificate, vcSigningKey, vssMaxTTL)
-import           Pos.Crypto             (EncryptedSecretKey (..), SecretKey (..),
+import           Pos.Crypto             (EncryptedSecretKey (..), SecretKey (..), fullPublicKeyF,
                                          VssKeyPair, hashHexF, noPassEncrypt,
                                          redeemPkB64F, toPublic, toVssPublicKey)
 import           Pos.Launcher           (HasConfigurations, withConfigurations)
@@ -62,7 +62,15 @@ genPrimaryKey :: (HasConfigurations, MonadIO m, MonadThrow m, WithLogger m, Mona
 genPrimaryKey path = do
     sk <- liftIO $ generateSecrets Nothing
     void $ dumpKeyfile True path sk
-    logInfo $ "Successfully generated primary key " <> (toText path)
+    let pk = toPublic (sk ^. _1)
+    logInfo $
+        sformat
+            ("Successfully generated primary key and dumped to "%string%
+             ", stakeholder id: "%hashHexF%
+             ", PK (base64): "%fullPublicKeyF)
+            path
+            (addressHash pk)
+            pk
 
 readKey :: (MonadIO m, MonadThrow m, WithLogger m) => FilePath -> m ()
 readKey path = do
