@@ -189,8 +189,7 @@ genBlocksInTree secrets bootStakeholders blockchainTree = do
             , _bgpSkipNoKey       = False
             }
     -- Partial pattern-matching is safe because we specify
-    -- blockCount = 1 in the generation parameters.
-    -- FIXME avieth what if it's 'Nothing'? Then the list is empty.
+    -- blockCount = 1 and skipNoKey = False in the generation parameters.
     let inj Nothing   = []
         inj (Just it) = [it]
     [block] <- genBlocks blockGenParams inj
