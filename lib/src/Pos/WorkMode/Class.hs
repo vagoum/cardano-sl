@@ -51,7 +51,6 @@ import           Pos.Txp.MemState            (MempoolExt, MonadTxpLocal, MonadTx
 import           Pos.Update.Configuration    (HasUpdateConfiguration)
 import           Pos.Update.Context          (UpdateContext)
 import           Pos.Update.Params           (UpdateParams)
-import           Pos.Util.CompileInfo        (HasCompileInfo)
 import           Pos.Util.TimeWarp           (CanJsonLog)
 import           Pos.Util.Util               (HasLens, HasLens')
 
@@ -112,5 +111,4 @@ type MinWorkMode m
       , HasInfraConfiguration
       , HasUpdateConfiguration
       , HasNodeConfiguration
-      , HasCompileInfo
       )

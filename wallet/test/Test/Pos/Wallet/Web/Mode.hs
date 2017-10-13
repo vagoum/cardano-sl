@@ -10,7 +10,6 @@ module Test.Pos.Wallet.Web.Mode
        , WalletTestContext (..)
        , runWalletTestMode
        , WalletProperty
-       , HasWalletSpecConfiguration
        ) where
 
 import           Universum
@@ -56,7 +55,6 @@ import           Pos.Explorer                      (ExplorerExtra, eTxNormalize,
                                                     eTxProcessTransactionNoLock)
 import           Pos.Generator.Block               (BlockGenMode)
 import qualified Pos.GState                        as GS
-import           Pos.Infra.Configuration           (HasInfraConfiguration)
 import           Pos.KnownPeers                    (MonadFormatPeers (..),
                                                     MonadKnownPeers (..))
 import           Pos.Launcher                      (HasConfigurations)
@@ -73,9 +71,7 @@ import           Pos.StateLock                     (StateLock, StateLockMetrics 
 import           Pos.Txp                           (GenericTxpLocalData, MempoolExt,
                                                     MonadTxpLocal (..), TxpHolderTag,
                                                     txpTip)
-import           Pos.Update.Configuration          (HasUpdateConfiguration)
 import           Pos.Update.Context                (UpdateContext)
-import           Pos.Util.CompileInfo              (HasCompileInfo)
 import           Pos.Util.JsonLog                  (HasJsonLogConfig (..),
                                                     JsonLogConfig (..), jsonLogDefault)
 import           Pos.Util.LoggerName               (HasLoggerName' (..),
@@ -112,15 +108,6 @@ import           Test.Pos.Block.Logic.Mode         (BlockTestContext (..),
                                                     getCurrentSlotInaccurateTestDefault,
                                                     getCurrentSlotTestDefault,
                                                     initBlockTestContext)
-
-type HasWalletSpecConfiguration
-   = ( HasConfiguration
-     , HasGtConfiguration
-     , HasInfraConfiguration
-     , HasUpdateConfiguration
-     , HasNodeConfiguration
-     , HasCompileInfo
-     )
 
 ----------------------------------------------------------------------------
 -- Parameters
@@ -351,15 +338,7 @@ instance HasLens StateLockMetrics WalletTestContext StateLockMetrics where
             , slmRelease = const $ pure ()
             }
 
-instance
-    ( HasConfiguration
-    , HasNodeConfiguration
-    , HasInfraConfiguration
-    , HasGtConfiguration
-    , HasUpdateConfiguration
-    , HasCompileInfo
-    )
-    => MonadAddresses WalletTestMode where
+instance HasConfigurations => MonadAddresses WalletTestMode where
     type AddrData WalletTestMode = (AccountId, PassPhrase)
     getNewAddress = getNewAddressWebWallet
 

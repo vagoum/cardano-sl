@@ -7,30 +7,19 @@ import           Universum
 import           Test.Hspec                   (Spec, describe)
 import           Test.Hspec.QuickCheck        (prop)
 
-import           Pos.Util.CompileInfo         (retrieveCompileTimeInfo, withCompileInfo)
+import           Pos.Launcher                 (HasConfigurations)
 import           Pos.Wallet.Web.Methods.Logic (getAccounts, getWallets)
 
-import           Test.Pos.Util                (stopProperty, withDefConfiguration,
-                                               withDefConfiguration,
-                                               withDefGtConfiguration,
-                                               withDefInfraConfiguration,
-                                               withDefNodeConfiguration,
-                                               withDefUpdateConfiguration)
-import           Test.Pos.Wallet.Web.Mode     (HasWalletSpecConfiguration, WalletProperty)
+import           Test.Pos.Util                (stopProperty, withDefConfigurations)
+import           Test.Pos.Wallet.Web.Mode     (WalletProperty)
 
 spec :: Spec
-spec = withCompileInfo $(retrieveCompileTimeInfo) $
-       withDefConfiguration $
-       withDefGtConfiguration $
-       withDefInfraConfiguration $
-       withDefUpdateConfiguration $
-       withDefNodeConfiguration $ do
-    describe "Pos.Wallet.Web.Methods" $ do
-        prop emptyWalletOnStarts emptyWallet
+spec = withDefConfigurations $ describe "Pos.Wallet.Web.Methods" $ do
+    prop emptyWalletOnStarts emptyWallet
   where
     emptyWalletOnStarts = "wallet must be empty on start"
 
-emptyWallet :: HasWalletSpecConfiguration => WalletProperty ()
+emptyWallet :: HasConfigurations => WalletProperty ()
 emptyWallet = do
     wallets <- lift getWallets
     unless (null wallets) $

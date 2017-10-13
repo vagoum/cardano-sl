@@ -40,7 +40,7 @@ import           Pos.Txp                  (bootDustThreshold)
 import           Pos.Update.Configuration (HasUpdateConfiguration, curSoftwareVersion,
                                            lastKnownBlockVersion, ourSystemTag)
 import           Pos.Util                 (inAssertMode)
-import           Pos.Util.CompileInfo     (compileInfo)
+import           Pos.Util.CompileInfo     (HasCompileInfo, compileInfo)
 import           Pos.Util.LogSafe         (logInfoS)
 import           Pos.Worker               (allWorkers)
 import           Pos.WorkMode.Class       (WorkMode)
@@ -49,7 +49,7 @@ import           Pos.WorkMode.Class       (WorkMode)
 -- Initialization, running of workers, running of plugins.
 runNode'
     :: forall ssc ext ctx m.
-       ( WorkMode ssc ctx m
+       ( HasCompileInfo, WorkMode ssc ctx m
        )
     => NodeResources ssc ext m
     -> [WorkerSpec m]
@@ -126,7 +126,8 @@ runNode' NodeResources {..} workers' plugins' = ActionSpec $ \vI sendActions -> 
 -- | Entry point of full node.
 -- Initialization, running of workers, running of plugins.
 runNode ::
-       ( SscConstraint ssc
+       ( HasCompileInfo
+       , SscConstraint ssc
        , WorkMode ssc ctx m
        )
     => NodeResources ssc ext m

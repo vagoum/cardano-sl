@@ -77,7 +77,6 @@ import           Pos.Txp                          (MempoolExt, MonadTxpLocal (..
                                                    MonadTxpMem, txNormalize,
                                                    txProcessTransaction)
 import           Pos.Util                         (Some (..))
-import           Pos.Util.CompileInfo             (HasCompileInfo)
 import           Pos.Util.JsonLog                 (HasJsonLogConfig (..), jsonLogDefault)
 import           Pos.Util.LoggerName              (HasLoggerName' (..),
                                                    getLoggerNameDefault,
@@ -310,7 +309,7 @@ instance MonadKeys WalletWebMode where
         new <- atomically $ modifyTVarS us (identity <%= f)
         writeUserSecret new
 
-instance (HasConfigurations, HasCompileInfo) => MonadWalletSendActions WalletWebMode where
+instance HasConfigurations => MonadWalletSendActions WalletWebMode where
     sendTxToNetwork tx = do
         saVar <- view wwmcSendActions_L
         saMB <- atomically $ STM.tryReadTMVar saVar
