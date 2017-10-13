@@ -67,7 +67,10 @@ bpGenBlocks blkCnt (EnableTxPayload enableTxPayload) (InplaceDB inplaceDB) = do
                 }
     params <- pick $ sized genBlockGenParams
     g <- pick $ MkGen $ \qc _ -> qc
-    lift $ evalRandT (genBlocks params) g
+    let inj :: Maybe (Blund SscGodTossing) -> [Blund SscGodTossing]
+        inj Nothing = []
+        inj (Just it) = [it]
+    lift $ OldestFirst <$> evalRandT (genBlocks params inj) g
 
 -- | A version of 'bpGenBlocks' which generates exactly one
 -- block. Allows one to avoid unsafe functions sometimes.
