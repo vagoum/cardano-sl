@@ -1122,7 +1122,7 @@ self: {
           description = "Reporting server for CSL";
           license = stdenv.lib.licenses.bsd3;
         }) {};
-      cardano-sl = callPackage ({ MonadRandom, QuickCheck, acid-state, aeson, ansi-terminal, ansi-wl-pprint, async, base, base58-bytestring, base64-bytestring, binary, bytestring, canonical-json, cardano-crypto, cardano-report-server, cardano-sl-core, cardano-sl-db, cardano-sl-godtossing, cardano-sl-infra, cardano-sl-lrc, cardano-sl-ssc, cardano-sl-txp, cardano-sl-update, cborg, cereal, conduit, containers, cpphs, cryptonite, cryptonite-openssl, data-default, deepseq, deriving-compat, digest, directory, dlist, dns, ed25519, ekg-core, ekg-statsd, ekg-wai, ether, exceptions, extra, file-embed, filelock, filepath, fmt, focus, formatting, generic-arbitrary, hashable, hspec, http-client, http-client-tls, http-conduit, http-types, iproute, kademlia, lens, list-t, log-warper, lrucache, memory, mkDerivation, mmorph, monad-control, monad-loops, mono-traversable, mtl, neat-interpolation, network-info, network-transport, network-transport-tcp, network-uri, node-sketch, optparse-applicative, parsec, plutus-prototype, pvss, quickcheck-instances, random, reflection, regex-tdfa, regex-tdfa-text, resourcet, rocksdb-haskell, safe-exceptions, safecopy, serokell-util, servant, servant-multipart, servant-server, stdenv, stm, stm-containers, string-qq, systemd, tagged, template-haskell, text, text-format, th-lift-instances, time, time-units, transformers, transformers-base, transformers-lift, universum, unix, unordered-containers, vector, wai, wai-extra, warp, warp-tls, yaml }:
+      cardano-sl = callPackage ({ MonadRandom, QuickCheck, acid-state, aeson, ansi-terminal, ansi-wl-pprint, async, base, base58-bytestring, base64-bytestring, binary, bytestring, canonical-json, cardano-crypto, cardano-report-server, cardano-sl-core, cardano-sl-db, cardano-sl-godtossing, cardano-sl-infra, cardano-sl-lrc, cardano-sl-ssc, cardano-sl-txp, cardano-sl-update, cborg, cereal, conduit, containers, cpphs, cryptonite, cryptonite-openssl, data-default, deepseq, deriving-compat, digest, directory, dlist, dns, ed25519, ekg-core, ekg-statsd, ekg-wai, ether, exceptions, extra, file-embed, filelock, filepath, fmt, focus, formatting, generic-arbitrary, hashable, hspec, http-client, http-client-tls, http-conduit, http-types, iproute, kademlia, lens, list-t, log-warper, lrucache, memory, mkDerivation, mmorph, monad-control, monad-loops, mono-traversable, mtl, neat-interpolation, network-info, network-transport, network-transport-tcp, network-uri, node-sketch, optparse-applicative, parsec, plutus-prototype, pvss, quickcheck-instances, random, reflection, regex-tdfa, regex-tdfa-text, resourcet, rocksdb-haskell, safe-exceptions, safecopy, serokell-util, servant, servant-multipart, servant-server, servant-swagger, stdenv, stm, stm-containers, string-qq, systemd, tagged, template-haskell, text, text-format, th-lift-instances, time, time-units, transformers, transformers-base, transformers-lift, universum, unix, unordered-containers, vector, wai, wai-extra, warp, warp-tls, yaml }:
       mkDerivation {
           pname = "cardano-sl";
           version = "1.0.2";
@@ -1214,6 +1214,7 @@ self: {
             servant
             servant-multipart
             servant-server
+            servant-swagger
             stm
             stm-containers
             string-qq
@@ -1504,6 +1505,7 @@ self: {
             cardano-sl-ssc
             cardano-sl-update
             containers
+            data-default
             either
             engine-io
             engine-io-wai
@@ -1933,7 +1935,7 @@ self: {
           description = "Cardano SL - Tools";
           license = stdenv.lib.licenses.mit;
         }) {};
-      cardano-sl-txp = callPackage ({ QuickCheck, aeson, base, bytestring, cardano-sl-core, cardano-sl-db, cardano-sl-infra, conduit, containers, cpphs, data-default, ekg-core, ether, exceptions, fmt, formatting, generic-arbitrary, hashable, lens, lifted-base, log-warper, memory, mkDerivation, monad-control, mtl, neat-interpolation, node-sketch, plutus-prototype, resourcet, rocksdb-haskell, serokell-util, stdenv, stm, tagged, template-haskell, text, text-format, time-units, transformers, universum, unordered-containers, vector }:
+      cardano-sl-txp = callPackage ({ QuickCheck, aeson, base, bytestring, cardano-sl-core, cardano-sl-db, cardano-sl-infra, conduit, containers, cpphs, data-default, ekg-core, ether, exceptions, fmt, formatting, generic-arbitrary, hashable, lens, lifted-base, log-warper, memory, mkDerivation, mmorph, monad-control, mtl, neat-interpolation, node-sketch, plutus-prototype, resourcet, rocksdb-haskell, serokell-util, stdenv, stm, tagged, template-haskell, text, text-format, time-units, transformers, universum, unordered-containers, vector }:
       mkDerivation {
           pname = "cardano-sl-txp";
           version = "1.0.2";
@@ -1959,6 +1961,7 @@ self: {
             lifted-base
             log-warper
             memory
+            mmorph
             monad-control
             mtl
             neat-interpolation
@@ -3496,6 +3499,8 @@ self: {
           pname = "foldl";
           version = "1.2.5";
           sha256 = "aa2d5c3cfb8641163dcdd489e9e0fe481301e94c0e3940fc9e234f8e1b00ec4b";
+          revision = "1";
+          editedCabalFile = "02lk5838594mi15bylz2kpcm1c4akbsswj73i7k8xw4ns66iaq04";
           libraryHaskellDepends = [
             base
             bytestring
@@ -4512,11 +4517,11 @@ self: {
           description = "ListT done right";
           license = stdenv.lib.licenses.mit;
         }) {};
-      log-warper = callPackage ({ aeson, ansi-terminal, base, containers, directory, dlist, errors, exceptions, extra, filepath, formatting, hashable, lens, mkDerivation, mmorph, monad-control, monad-loops, mtl, network, safecopy, stdenv, text, text-format, time, transformers, transformers-base, universum, unix, unordered-containers, yaml }:
+      log-warper = callPackage ({ aeson, ansi-terminal, base, containers, deepseq, directory, dlist, errors, exceptions, extra, filepath, fmt, formatting, hashable, lens, mkDerivation, mmorph, monad-control, monad-loops, mtl, network, safecopy, stdenv, text, text-format, time, transformers, transformers-base, universum, unix, unordered-containers, yaml }:
       mkDerivation {
           pname = "log-warper";
-          version = "1.2.3";
-          sha256 = "7c2e2bed8beb19c338066a7055e05e7f0acdbcf532b3f327a83ffa6f21136e64";
+          version = "1.3.3";
+          sha256 = "5ab18ba9e3633a869729a87cb35af348c10d3d566bcfa2463bfa6365b54bfde4";
           isLibrary = true;
           isExecutable = true;
           libraryHaskellDepends = [
@@ -4524,12 +4529,14 @@ self: {
             ansi-terminal
             base
             containers
+            deepseq
             directory
             dlist
             errors
             exceptions
             extra
             filepath
+            fmt
             formatting
             hashable
             lens
@@ -4984,8 +4991,8 @@ self: {
           version = "0.2.0.0";
           src = fetchgit {
             url = "https://github.com/serokell/time-warp-nt.git";
-            sha256 = "13avvcni90crjrq10xdpz8d6v5gawm1nw5rvj8lg6vkmcsy44zni";
-            rev = "630b23847ea39778f5616134a4f416b473639a15";
+            sha256 = "046kqk7m2rhzxk3960fd4jcvar8hcczbg7lv13jpw1g5wvl431fn";
+            rev = "48cb189a412c5a606888285944b9a8f32fcd0d30";
           };
           isLibrary = true;
           isExecutable = true;
@@ -7013,8 +7020,8 @@ self: {
       universum = callPackage ({ base, bytestring, containers, deepseq, exceptions, ghc-prim, hashable, microlens, microlens-mtl, mkDerivation, mtl, safe, safe-exceptions, stdenv, stm, text, text-format, transformers, type-operators, unordered-containers, utf8-string, vector }:
       mkDerivation {
           pname = "universum";
-          version = "0.6.1";
-          sha256 = "538bff64be0fba8902cd7c5b0fc40d50848567886078227a5ee388ce9a9f04a3";
+          version = "0.7.0";
+          sha256 = "2eb3398cafb621a0b8966e5d6af16989a3dac0ec7467c62fd3c9a127e84148b4";
           libraryHaskellDepends = [
             base
             bytestring
