@@ -33,7 +33,7 @@ import           Pos.Util.UserSecret        (readUserSecret, usKeys, usWallet, u
 import           Pos.Wallet                 (addSecretKey, getBalance, getSecretKeysPlain)
 import           Pos.Wallet.Web.Secret      (WalletUserSecret (..))
 
-import           BlockGen                   (generateBlocks)
+import           Command.BlockGen           (generateBlocks)
 import qualified Command.Rollback           as Rollback
 import qualified Command.Tx                 as Tx
 import           Command.Types              (Command (..))
