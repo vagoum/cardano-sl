@@ -38,7 +38,7 @@ import           Universum
 import           Control.Lens           (makeLenses, makePrisms, makeWrapped)
 import           Data.Default           (Default, def)
 import qualified Data.HashMap.Strict    as HM
-import qualified Data.Map               as M (lookup, toList)
+import qualified Data.Map               as M (lookup, member, toList)
 import           Data.Text.Lazy.Builder (Builder)
 import           Formatting             (Format, later)
 import           Serokell.Util.Text     (mapBuilderJson)
@@ -152,7 +152,9 @@ applyUtxoModToAddrCoinMap modifier (addrCoins, utxo) =
     let subAddress r c = if r < c then Just (c `unsafeSubCoin` r) else Nothing in
     let updateHM (ad, coins) = HM.update (subAddress coins) ad in
     let addrCoinsRest = foldr updateHM addrCoins resolvedAddrs in
-    let modAddrCoins = map (outToPair . snd) (MM.insertions modifier) in
+    -- We remove such TxIn which are already in wallet utxo.
+    let insertionsNotInUtxo = filter (not . flip M.member utxo . fst) (MM.insertions modifier) in
+    let modAddrCoins = map (outToPair . snd) insertionsNotInUtxo in
     foldr (uncurry $ HM.insertWith unsafeAddCoin) addrCoinsRest modAddrCoins
 
 instance Default UndoMap where
