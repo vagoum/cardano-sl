@@ -31,8 +31,8 @@ import           Pos.Crypto                 (emptyPassphrase, encToPublic,
 import           Pos.DB.Class               (MonadGState (..))
 import           Pos.Launcher.Configuration (HasConfigurations)
 import           Pos.Util.CompileInfo       (HasCompileInfo)
-import           Pos.Util.UserSecret        (readUserSecret, usKeys, usWallet, userSecret)
-import           Pos.Wallet.Web.Secret      (WalletUserSecret (..))
+import           Pos.Util.UserSecret        (WalletUserSecret (..), readUserSecret,
+                                             usKeys, usWallet, userSecret)
 
 import qualified Command.Rollback           as Rollback
 import qualified Command.Tx                 as Tx
