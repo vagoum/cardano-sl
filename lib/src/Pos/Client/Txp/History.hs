@@ -54,7 +54,7 @@ import           Pos.Core                     (Address, ChainDifficulty, HasConf
                                                headerHash)
 import           Pos.Crypto                   (WithHash (..), withHash)
 import           Pos.DB                       (MonadDBRead, MonadGState, MonadRealDB)
-import           Pos.DB.Block                 (MonadBlockDB)
+import           Pos.DB.Block                 (MonadBlockDB, blkGetBlund)
 import qualified Pos.GState                   as GS
 import           Pos.Reporting                (MonadReporting)
 import           Pos.Slotting                 (MonadSlots, getSlotStartPure,
@@ -256,7 +256,7 @@ getBlockHistoryDefault addrs = do
         getBlockTimestamp blk = getSlotStartPure systemStart (blk ^. mainBlockSlot) sd
 
         blockFetcher :: HeaderHash -> GenesisHistoryFetcher m (Map TxId TxHistoryEntry)
-        blockFetcher start = GS.foldlUpWhileM fromBlund start (const $ const True)
+        blockFetcher start = GS.foldlUpWhileM blkGetBlund fromBlund start (const $ const True)
             (deriveAddrHistoryBlk addrs getBlockTimestamp) mempty
 
     runGenesisToil . evalToilTEmpty $ blockFetcher bot
