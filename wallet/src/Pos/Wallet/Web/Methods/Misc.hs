@@ -8,6 +8,7 @@ module Pos.Wallet.Web.Methods.Misc
 
        , isValidAddress
 
+       , allUpdates
        , nextUpdate
        , postponeUpdate
        , applyUpdate
@@ -31,8 +32,8 @@ import           Pos.Wallet.Web.ClientTypes (CProfile (..), CUpdateInfo (..),
                                              SyncProgress (..))
 import           Pos.Wallet.Web.Error       (WalletError (..))
 import           Pos.Wallet.Web.Mode        (MonadWalletWebMode)
-import           Pos.Wallet.Web.State       (getNextUpdate, getProfile, removeNextUpdate,
-                                             setProfile, testReset)
+import           Pos.Wallet.Web.State       (getNextUpdate, getProfile, getUpdates,
+                                             removeNextUpdate, setProfile, testReset)
 
 
 ----------------------------------------------------------------------------
@@ -57,6 +58,10 @@ isValidAddress sAddr =
 ----------------------------------------------------------------------------
 -- Updates
 ----------------------------------------------------------------------------
+
+-- | Get info on all updates
+allUpdates :: MonadWalletWebMode m => m [CUpdateInfo]
+allUpdates = getUpdates
 
 -- | Get last update info
 nextUpdate :: MonadWalletWebMode m => m CUpdateInfo

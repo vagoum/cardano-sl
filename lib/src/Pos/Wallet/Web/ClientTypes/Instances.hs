@@ -29,7 +29,8 @@ import           Pos.Wallet.Web.ClientTypes.Types (AccountId (..), CAccount (..)
                                                    CCoin (..), CElectronCrashReport (..),
                                                    CHash (..), CId (..), CPassPhrase (..),
                                                    CPtxCondition (..), CTx (..),
-                                                   CTxId (..), CWallet (..), mkCTxId)
+                                                   CTxId (..), CUpdateInfo, CWallet (..),
+                                                   mkCTxId)
 import           Pos.Wallet.Web.Pending.Types     (PtxCondition (..))
 
 ----------------------------------------------------------------------------
@@ -157,12 +158,12 @@ instance FromMultipart CElectronCrashReport where
 
 instance HasTruncateLogPolicy CTx where
     -- Related logs are printed often.
-    -- Tx history changes increamentally, order is newest first
+    -- Tx history changes incrementally, order is newest first
     truncateLogPolicy = take 5
 
 instance HasTruncateLogPolicy CWallet where
     -- Related logs are printed seldom.
-    -- Contains constantly chaning info (balance)
+    -- Contains constantly changing info (balance)
     truncateLogPolicy = identity
 
 instance HasTruncateLogPolicy CAccount where
@@ -179,6 +180,10 @@ instance HasTruncateLogPolicy CAddress where
         in take 5 (withMoney <> withoutMoney)
       where
         zeroMoney = encodeCType minBound
+
+instance HasTruncateLogPolicy CUpdateInfo where
+    -- Updates are added and removed to the beginning of the list.
+    truncateLogPolicy = take 5
 
 -- TODO [CSM-466] deal with this hack
 instance Buildable (WithTruncatedLog ([CTx], Word)) where
