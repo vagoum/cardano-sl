@@ -40,7 +40,6 @@ import           Pos.Slotting                     (HasSlottingVar (..), MonadSlo
                                                    mkSimpleSlottingVar)
 import qualified Pos.Slotting                     as Slot
 import           Pos.Ssc.Class                    (SscBlock)
-import           Pos.Ssc.GodTossing               (SscGodTossing)
 import           Pos.Ssc.GodTossing.Configuration (HasGtConfiguration)
 import           Pos.Update.Configuration         (HasUpdateConfiguration)
 import           Pos.Util.Util                    (Some, postfixLFields)
@@ -170,7 +169,7 @@ instance
 
 instance
     HasTxpConfigurations =>
-    DB.MonadBlockDBGeneric (Some IsHeader) (SscBlock SscGodTossing) () TxpTestInitMode
+    DB.MonadBlockDBGeneric (Some IsHeader) SscBlock () TxpTestInitMode
   where
     dbGetBlock  = DB.dbGetBlockSscPureDefault
     dbGetUndo   = DB.dbGetUndoSscPureDefault
