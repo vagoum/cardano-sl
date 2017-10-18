@@ -28,6 +28,7 @@ import           Pos.Core                     (GenesisData (..), HasConfiguratio
                                                blkSecurityParam, epochSlots, genesisData,
                                                headerHash)
 import           Pos.DB.Pure                  (dbPureDump)
+import           Pos.Explorer.Txp             (explorerTxpGlobalSettings)
 import           Pos.Generator.BlockEvent.DSL (BlockApplyResult (..), BlockEventGenT,
                                                BlockRollbackFailure (..),
                                                BlockRollbackResult (..), BlockScenario,
@@ -280,7 +281,7 @@ blockPropertyScenarioGen m = do
     allSecrets <- getAllSecrets
     let genStakeholders = gdBootStakeholders genesisData
     g <- pick $ MkGen $ \qc _ -> qc
-    lift $ flip evalRandT g $ runBlockEventGenT allSecrets genStakeholders m
+    lift $ flip evalRandT g $ runBlockEventGenT allSecrets genStakeholders explorerTxpGlobalSettings m
 
 prettyScenario :: HasConfiguration => BlockScenario -> Text
 prettyScenario scenario = pretty (fmap (headerHash . fst) scenario)

@@ -522,6 +522,7 @@ test-suite cardano-test
                      , cardano-sl-ssc
                      , cardano-sl-txp
                      , cardano-sl-update
+                     , cardano-sl-explorer
                      , cborg
                      , cereal
                      , containers
