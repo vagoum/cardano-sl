@@ -20,12 +20,13 @@ import           System.Wlog              (logDebug)
 
 import           Pos.Binary               (Raw)
 import           Pos.Communication        (SendActions, immediateConcurrentConversations,
-                                           submitUpdateProposal, submitVote)
+                                           sendUpdateProposal, submitUpdateProposal,
+                                           submitVote)
 import           Pos.Configuration        (HasNodeConfiguration)
 import           Pos.Core.Configuration   (HasConfiguration, genesisBlockVersionData)
 import           Pos.Crypto               (Hash, SignTag (SignUSVote), emptyPassphrase,
                                            encToPublic, hash, hashHexF, safeSign,
-                                           unsafeHash, withSafeSigner)
+                                           unsafeHash, withSafeSigner, withSafeSigners)
 import           Pos.Data.Attributes      (mkAttributes)
 import           Pos.Infra.Configuration  (HasInfraConfiguration)
 import           Pos.Update               (BlockVersionData (..),
@@ -86,12 +87,14 @@ propose ::
        , HasNodeConfiguration
        )
     => SendActions AuxxMode
+    -> Int
     -> ProposeUpdateParams
+    -> Bool
     -> AuxxMode ()
-propose sendActions ProposeUpdateParams{..} = do
+propose sendActions idx ProposeUpdateParams{..} voteAll = do
     CmdCtx{ccPeers} <- getCmdCtx
     logDebug "Proposing update..."
-    skey <- (!! puIdx) <$> getSecretKeysPlain
+    skey <- (!! idx) <$> getSecretKeysPlain
     let BlockVersionData {..} = genesisBlockVersionData
     let bvm =
             BlockVersionModifier
@@ -113,6 +116,7 @@ propose sendActions ProposeUpdateParams{..} = do
     updateData <- mapM updateDataElement puUpdates
     let udata = HM.fromList updateData
     let whenCantCreate = error . mappend "Failed to create update proposal: "
+
     withSafeSigner skey (pure emptyPassphrase) $ \case
         Nothing -> putText "Invalid passphrase"
         Just ss -> do
@@ -127,10 +131,34 @@ propose sendActions ProposeUpdateParams{..} = do
             if null ccPeers
                 then putText "Error: no addresses specified"
                 else do
-                    submitUpdateProposal (immediateConcurrentConversations sendActions ccPeers) ss updateProposal
-                    let id = hash updateProposal
-                    putText $
-                      sformat ("Update proposal submitted, upId: "%hashHexF) id
+                    let upid = hash updateProposal
+                    let enqueue = immediateConcurrentConversations sendActions ccPeers
+                    if not voteAll then do
+                        submitUpdateProposal enqueue ss updateProposal
+                        putText $ sformat ("Update proposal submitted, upId: "%hashHexF) upid
+                    else do
+                        votes <- constructVotes upid
+                        sendUpdateProposal enqueue upid updateProposal votes
+                        putText $ sformat ("Update proposal submitted along with votes, upId: "%hashHexF) upid
+  where
+    constructVotes :: UpId -> AuxxMode [UpdateVote]
+    constructVotes upid = do
+        skeys <- getSecretKeysPlain
+        signatures <-
+            withSafeSigners
+                skeys
+                (pure emptyPassphrase)
+                (pure . map (\s -> safeSign SignUSVote s (upid, True)))
+        let safeZip a b =
+                if length a == length b then zip a b
+                else error $ "Number of signatures: " <> show (length b) <> ", expected " <> show (length a)
+        forM (safeZip skeys signatures) $ \(skey, signature) -> pure $
+            UpdateVote
+                { uvKey        = encToPublic skey
+                , uvProposalId = upid
+                , uvDecision   = True
+                , uvSignature  = signature
+                }
 
 updateDataElement :: MonadIO m => ProposeUpdateSystem -> m (SystemTag, UpdateData)
 updateDataElement ProposeUpdateSystem{..} = do

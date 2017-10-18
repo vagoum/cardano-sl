@@ -119,10 +119,12 @@ sendToAllGenesis = SendToAllGenesis <$> sendToAllGenesisParams
 vote :: Parser Command
 vote = Vote <$> num <*> switch <*> hash
 
+voteAllFlag :: Parser Bool
+voteAllFlag = (True <$ lexeme (try $ string "vote-all")) <|> pure False
+
 proposeUpdateParams :: Parser ProposeUpdateParams
 proposeUpdateParams =
     ProposeUpdateParams <$>
-    num <*>
     lexeme parseBlockVersion <*>
     lexeme parseIntegralSafe <*>
     lexeme parseIntegralSafe <*>
@@ -131,7 +133,7 @@ proposeUpdateParams =
     many1 parseProposeUpdateSystem
 
 proposeUpdate :: Parser Command
-proposeUpdate = ProposeUpdate <$> proposeUpdateParams
+proposeUpdate = ProposeUpdate <$> num <*> proposeUpdateParams <*> voteAllFlag
 
 hashInstaller :: Parser Command
 hashInstaller = HashInstaller <$> filePath

@@ -38,8 +38,7 @@ data SendToAllGenesisParams = SendToAllGenesisParams
 
 -- | Parameters for 'ProposeUpdate' command.
 data ProposeUpdateParams = ProposeUpdateParams
-    { puIdx             :: Int -- TODO: what is this? rename
-    , puBlockVersion    :: BlockVersion
+    { puBlockVersion    :: BlockVersion
     , puScriptVersion   :: ScriptVersion
     , puSlotDurationSec :: Int
     , puMaxBlockSize    :: Byte
@@ -52,7 +51,7 @@ data Command
     | Send Int (NonEmpty TxOut)
     | SendToAllGenesis !SendToAllGenesisParams
     | Vote Int Bool UpId
-    | ProposeUpdate !ProposeUpdateParams
+    | ProposeUpdate !Int !ProposeUpdateParams !Bool
     | HashInstaller !FilePath
     | Help
     | ListAddresses
