@@ -37,8 +37,10 @@ import           Serokell.Aeson.Options        (defaultOptions)
 import           System.Wlog                   (WithLogger)
 
 import           Pos.Binary.Block              ()
+import           Pos.Binary.Class              (Bi)
 import           Pos.Binary.Core               ()
-import           Pos.Block.Core                (BiSsc, Block, mainBlockTxPayload)
+import           Pos.Block.Core                (Block, BlockHeader,
+                                                mainBlockTxPayload)
 import           Pos.Block.Core.Genesis.Lens   (genBlockEpoch)
 import           Pos.Block.Core.Main.Lens      (mainBlockSlot)
 import           Pos.Communication.Relay.Logic (InvReqDataFlowLog)
@@ -127,7 +129,7 @@ $(deriveJSON defaultOptions ''JLTxR)
 $(deriveJSON defaultOptions ''JLMemPool)
 
 -- | Return event of created block.
-jlCreatedBlock :: (BiSsc, HasConfiguration) => Block -> JLEvent
+jlCreatedBlock :: (HasConfiguration, Bi BlockHeader) => Block -> JLEvent
 jlCreatedBlock block = JLCreatedBlock $ JLBlock {..}
   where
     jlHash = showHeaderHash $ headerHash block
