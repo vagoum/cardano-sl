@@ -71,6 +71,7 @@ import           Pos.Generator.Block              (BlockGenParams (..), BlockTxp
 import           Pos.GState.Context               (withClonedGState)
 import           Pos.Ssc.GodTossing.Configuration (HasGtConfiguration)
 import           Pos.Ssc.GodTossing.Type          (SscGodTossing)
+import           Pos.Txp                          (TxpGlobalSettings)
 import           Pos.Util.Chrono                  (NE, NewestFirst (..), OldestFirst (..),
                                                    toNewestFirst, toOldestFirst,
                                                    _OldestFirst)
@@ -163,19 +164,21 @@ genBlocksInForest
     :: BlockTxpGenMode g ctx m
     => AllSecrets
     -> GenesisWStakeholders
+    -> TxpGlobalSettings
     -> BlockchainForest BlockDesc
     -> RandT g m (BlockchainForest BlundDefault)
-genBlocksInForest secrets bootStakeholders =
+genBlocksInForest secrets bootStakeholders txpSettings =
     traverse $ mapRandT withClonedGState .
-    genBlocksInTree secrets bootStakeholders
+    genBlocksInTree secrets bootStakeholders txpSettings
 
 genBlocksInTree
     :: BlockTxpGenMode g ctx m
     => AllSecrets
     -> GenesisWStakeholders
+    -> TxpGlobalSettings
     -> BlockchainTree BlockDesc
     -> RandT g m (BlockchainTree BlundDefault)
-genBlocksInTree secrets bootStakeholders blockchainTree = do
+genBlocksInTree secrets bootStakeholders txpSettings blockchainTree = do
     let BlockchainTree blockDesc blockchainForest = blockchainTree
         txGenParams = case blockDesc of
             BlockDescDefault  -> TxGenParams (0, 0) 0
@@ -187,11 +190,12 @@ genBlocksInTree secrets bootStakeholders blockchainTree = do
             , _bgpTxGenParams     = txGenParams
             , _bgpInplaceDB       = True
             , _bgpSkipNoKey       = False
+            , _bgpTxpGlobalSettings = txpSettings
             }
     -- Partial pattern-matching is safe because we specify
     -- blockCount = 1 in the generation parameters.
     OldestFirst [block] <- genBlocks blockGenParams
-    forestBlocks <- genBlocksInForest secrets bootStakeholders blockchainForest
+    forestBlocks <- genBlocksInForest secrets bootStakeholders txpSettings blockchainForest
     return $ BlockchainTree block forestBlocks
 
 -- Precondition: paths in the structure are non-empty.
@@ -200,10 +204,11 @@ genBlocksInStructure ::
        , Functor t, Foldable t)
     => AllSecrets
     -> GenesisWStakeholders
+    -> TxpGlobalSettings
     -> Map Path BlockDesc
     -> t Path
     -> RandT g m (t BlundDefault)
-genBlocksInStructure secrets bootStakeholders annotations s = do
+genBlocksInStructure secrets bootStakeholders txpSettings annotations s = do
     let
         getAnnotation :: Path -> BlockDesc
         getAnnotation path =
@@ -213,7 +218,7 @@ genBlocksInStructure secrets bootStakeholders annotations s = do
         descForest :: BlockchainForest BlockDesc
         descForest = buildBlockchainForest BlockDescDefault paths
     blockForest :: BlockchainForest BlundDefault <-
-        genBlocksInForest secrets bootStakeholders descForest
+        genBlocksInForest secrets bootStakeholders txpSettings descForest
     let
         getBlock :: Path -> BlundDefault
         getBlock path = Map.findWithDefault

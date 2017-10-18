@@ -52,7 +52,6 @@ import           Pos.Context                      (ConnectedPeers (..), NodeCont
 import           Pos.Core                         (HasConfiguration, Timestamp,
                                                    gdStartTime, genesisData)
 import           Pos.DB                           (MonadDBRead, NodeDBs)
-import           Pos.DB.DB                        (initNodeDBs)
 import           Pos.DB.Rocks                     (closeNodeDBs, openNodeDBs)
 import           Pos.Delegation                   (DelegationVar, mkDelegationVar)
 import           Pos.DHT.Real                     (KademliaDHTInstance,
@@ -73,12 +72,8 @@ import           Pos.Ssc.Extra                    (SscState, mkSscState)
 import           Pos.Ssc.GodTossing.Configuration (HasGtConfiguration)
 import           Pos.StateLock                    (newStateLock)
 import           Pos.Txp                          (GenericTxpLocalData (..),
-                                                   mkTxpLocalData, recordTxpMetrics)
-#ifdef WITH_EXPLORER
-import           Pos.Explorer                     (explorerTxpGlobalSettings)
-#else
-import           Pos.Txp                          (txpGlobalSettings)
-#endif
+                                                   TxpGlobalSettings, mkTxpLocalData,
+                                                   recordTxpMetrics)
 
 import           Pos.Launcher.Mode                (InitMode, InitModeContext (..),
                                                    runInitMode)
@@ -146,8 +141,10 @@ allocateNodeResources
     -> NetworkConfig KademliaDHTInstance
     -> NodeParams
     -> SscParams ssc
+    -> TxpGlobalSettings
+    -> InitMode ssc ()
     -> Production (NodeResources ssc ext m)
-allocateNodeResources transport networkConfig np@NodeParams {..} sscnp = do
+allocateNodeResources transport networkConfig np@NodeParams {..} sscnp txpSettings initDB = do
     npDbPath <- case npDbPathM of
         Nothing -> do
             let dbPath = "node-db" :: FilePath
@@ -168,7 +165,7 @@ allocateNodeResources transport networkConfig np@NodeParams {..} sscnp = do
             futureSlottingContext
             futureLrcContext
     runInitMode initModeContext $ do
-        initNodeDBs @ssc
+        initDB
 
         nrEkgStore <- liftIO $ Metrics.newStore
 
@@ -182,7 +179,7 @@ allocateNodeResources transport networkConfig np@NodeParams {..} sscnp = do
                 , ancdEkgStore = nrEkgStore
                 , ancdTxpMemState = txpVar
                 }
-        ctx@NodeContext {..} <- allocateNodeContext ancd
+        ctx@NodeContext {..} <- allocateNodeContext ancd txpSettings
         putLrcContext ncLrcContext
         dlgVar <- mkDelegationVar @ssc
         sscState <- mkSscState @ssc
@@ -226,16 +223,18 @@ bracketNodeResources :: forall ssc ext m a.
       )
     => NodeParams
     -> SscParams ssc
+    -> TxpGlobalSettings
+    -> InitMode ssc ()
     -> (HasConfiguration => NodeResources ssc ext m -> Production a)
     -> Production a
-bracketNodeResources np sp k =
+bracketNodeResources np sp txp initDB action =
     bracketTransport (ncTcpAddr (npNetworkConfig np)) $ \transport ->
         bracketKademlia (npBaseParams np) (npNetworkConfig np) $ \networkConfig ->
-            bracket (allocateNodeResources transport networkConfig np sp)
+            bracket (allocateNodeResources transport networkConfig np sp txp initDB)
                     releaseNodeResources $ \nodeRes ->do
                 -- Notify systemd we are fully operative
                 notifyReady
-                k nodeRes
+                action nodeRes
 
 ----------------------------------------------------------------------------
 -- Logging
@@ -277,8 +276,9 @@ allocateNodeContext
     :: forall ssc ext .
       (HasConfiguration, HasNodeConfiguration, HasInfraConfiguration, SscConstraint ssc)
     => AllocateNodeContextData ssc ext
+    -> TxpGlobalSettings
     -> InitMode ssc (NodeContext ssc)
-allocateNodeContext ancd = do
+allocateNodeContext ancd txpSettings = do
     let AllocateNodeContextData { ancdNodeParams = np@NodeParams {..}
                                 , ancdSscParams = sscnp
                                 , ancdPutSlotting = putSlotting
@@ -315,11 +315,7 @@ allocateNodeContext ancd = do
             , ncLrcContext = LrcContext {..}
             , ncShutdownContext = ShutdownContext ncShutdownFlag
             , ncNodeParams = np
-#ifdef WITH_EXPLORER
-            , ncTxpGlobalSettings = explorerTxpGlobalSettings
-#else
-            , ncTxpGlobalSettings = txpGlobalSettings
-#endif
+            , ncTxpGlobalSettings = txpSettings
             , ncNetworkConfig = networkConfig
             , ..
             }

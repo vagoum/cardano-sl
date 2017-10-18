@@ -14,6 +14,7 @@ import           System.Wlog           (logInfo)
 import qualified Pos.Client.CLI        as CLI
 import           Pos.Communication     (OutSpecs, WorkerSpec)
 import           Pos.Core              (Timestamp (..), gdStartTime, genesisData)
+import           Pos.DB.DB             (initNodeDBs)
 import           Pos.Launcher          (HasConfigurations, NodeParams (..), NodeResources,
                                         bracketNodeResources, loggerBracket, lpConsoleLog,
                                         runNode, runRealBasedMode, withConfigurations)
@@ -21,6 +22,7 @@ import           Pos.Network.Types     (NetworkConfig (..), Topology (..),
                                         topologyDequeuePolicy, topologyEnqueuePolicy,
                                         topologyFailurePolicy)
 import           Pos.Ssc.SscAlgo       (SscAlgo (GodTossingAlgo))
+import           Pos.Txp               (txpGlobalSettings)
 import           Pos.Util.CompileInfo  (HasCompileInfo, retrieveCompileTimeInfo,
                                         withCompileInfo)
 import           Pos.Util.UserSecret   (usVss)
@@ -91,7 +93,7 @@ action opts@AuxxOptions {..} command = withConfigurations conf $ do
             lift $ runReaderT auxxAction auxxContext
     let vssSK = unsafeFromJust $ npUserSecret nodeParams ^. usVss
     let gtParams = CLI.gtSscParams cArgs vssSK (npBehaviorConfig nodeParams)
-    bracketNodeResources @AuxxSscType nodeParams gtParams $ \nr ->
+    bracketNodeResources @AuxxSscType nodeParams gtParams txpGlobalSettings (initNodeDBs @AuxxSscType) $ \nr ->
         runRealBasedMode toRealMode realModeToAuxx nr $
             (if aoNodeEnabled then runNodeWithSinglePlugin nr else identity)
             (auxxPlugin opts command)

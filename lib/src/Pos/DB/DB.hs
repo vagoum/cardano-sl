@@ -43,11 +43,6 @@ import           Pos.Update.DB                    (getAdoptedBVData)
 import           Pos.Util                         (inAssertMode)
 import           Pos.Util.Chrono                  (NewestFirst)
 
-#ifdef WITH_EXPLORER
-import           Pos.Explorer.DB                  (prepareExplorerDB)
-#endif
-
-
 -- | Initialize DBs if necessary.
 initNodeDBs
     :: forall ssc ctx m.
@@ -65,10 +60,6 @@ initNodeDBs = do
     prepareGStateDB initialTip
     prepareLrcDB
     prepareMiscDB
-#ifdef WITH_EXPLORER
-    prepareExplorerDB
-#endif
-
 
 -- | Load blunds from BlockDB starting from tip and while the @condition@ is
 -- true.

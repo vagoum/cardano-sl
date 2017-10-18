@@ -277,7 +277,7 @@ type MonadSscBlockDB ssc m
      = ( MonadBlockDBGeneric (Some IsHeader) (SscBlock ssc) () m
        , SscHelpersClass ssc)
 
--- | 'MonadBlocksDB' with write options
+-- | 'MonadBlockDB' with write options
 type MonadBlockDBWrite ssc m
     = ( MonadBlockDB ssc m
       , MonadBlockDBGenericWrite (BlockHeader ssc) (Block ssc) Undo m

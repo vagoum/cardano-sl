@@ -17,6 +17,7 @@ import           Pos.Crypto                  (SecretKey)
 import           Pos.DB                      (closeNodeDBs, openNodeDBs)
 import           Pos.Generator.Block         (BlockGenParams (..), genBlocks)
 import           Pos.Launcher                (withConfigurations)
+import           Pos.Txp                     (txpGlobalSettings)
 import           Pos.Txp.GenesisUtxo         (genesisUtxo)
 import           Pos.Txp.Toil                (GenesisUtxo (..))
 import           Pos.Util.UserSecret         (peekUserSecret, usPrimKey)
@@ -52,6 +53,7 @@ main = getBlockGenOptions >>= \(BlockGenOptions {..}) ->
                 , _bgpTxGenParams     = bgoTxGenParams
                 , _bgpInplaceDB       = True
                 , _bgpSkipNoKey       = True
+                , _bgpTxpGlobalSettings = txpGlobalSettings
                 }
     liftIO $ bracket (openNodeDBs (not bgoAppend) bgoPath) closeNodeDBs $ \db ->
         runProduction $

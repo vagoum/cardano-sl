@@ -37,6 +37,7 @@ import           Pos.Ssc.Class.Helpers        (SscHelpersClass)
 import           Pos.Txp                      (Tx, topsortTxs, txpTxs)
 import           Pos.Util.Chrono              (NE, NewestFirst (..), OldestFirst (..),
                                                toNewestFirst)
+import           Pos.Util.Util                (inAssertMode)
 
 ----------------------------------------------------------------------------
 -- Declarations
@@ -84,6 +85,7 @@ onApplyCallGeneral    blunds = do
     epochBlocks <- onApplyEpochBlocksExplorer blunds
     pageBlocks  <- onApplyPageBlocksExplorer blunds
     lastTxs     <- onApplyLastTxsExplorer blunds
+    inAssertMode DB.sanityCheckBalances
     pure $ SomeBatchOp [epochBlocks, pageBlocks, lastTxs]
 
 
@@ -95,6 +97,7 @@ onRollbackCallGeneral blunds = do
     epochBlocks <- onRollbackEpochBlocksExplorer blunds
     pageBlocks  <- onRollbackPageBlocksExplorer blunds
     lastTxs     <- onRollbackLastTxsExplorer blunds
+    inAssertMode DB.sanityCheckBalances
     pure $ SomeBatchOp [epochBlocks, pageBlocks, lastTxs]
 
 

@@ -46,6 +46,7 @@ import           Pos.Generator.BlockEvent    (BlockApplyResult (..), BlockDesc (
                                               SnapshotId, SnapshotOperation (..),
                                               byChance, enrichWithSnapshotChecking,
                                               genBlocksInStructure, pathSequence)
+import           Pos.Txp                     (TxpGlobalSettings)
 import           Pos.Util.Chrono             (NE, NewestFirst (..), OldestFirst (..),
                                               toOldestFirst, _NewestFirst)
 
@@ -119,11 +120,12 @@ runBlockEventGenT
     :: BlockTxpGenMode g ctx m
     => AllSecrets
     -> GenesisWStakeholders
+    -> TxpGlobalSettings
     -> BlockEventGenT g m ()
     -> RandT g m BlockScenario
-runBlockEventGenT secrets genStakeholders m = do
+runBlockEventGenT secrets genStakeholders txpSettings m = do
     (annotations, preBlockScenario) <- runBlockEventGenT' m
-    genBlocksInStructure secrets genStakeholders annotations preBlockScenario
+    genBlocksInStructure secrets genStakeholders txpSettings annotations preBlockScenario
 
 runBlockEventGenT' ::
     (RandomGen g, MonadBlockGen ctx m) =>
